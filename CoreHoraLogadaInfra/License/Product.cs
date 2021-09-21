@@ -17,6 +17,7 @@
         Discord,
         Completo,
         Pincash,
-        HoraLogada
+        HoraLogada,
+        NoSpam
     }
 }
