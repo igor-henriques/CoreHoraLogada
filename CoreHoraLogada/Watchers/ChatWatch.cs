@@ -107,8 +107,7 @@ namespace CoreHoraLogada.Watchers
         }
         private async Task FailNotification(RoleAnswerControl roleControl)
         {
-            await _serverContext.SendPrivateMessage(roleControl.Role.Id, "Você não digitou o código dentro do prazo limite. Tente novamente em 1 hora.");
-            await _roleContext.UpdateTimeCheck(roleControl.Role.Id);
+            await _serverContext.SendPrivateMessage(roleControl.Role.Id, "Você não digitou o código dentro do prazo limite. Tente novamente em 1 hora.");            
         }
         private async Task AddHour(RoleAnswerControl roleControl)
         {
