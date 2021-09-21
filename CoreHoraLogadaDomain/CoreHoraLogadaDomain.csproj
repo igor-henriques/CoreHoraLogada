@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CoreHoraLogadaInfra\CoreHoraLogadaInfra.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PWToolKit">
+      <HintPath>E:\PWToolKit-master\PWToolKit\bin\Release\PWToolKit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
