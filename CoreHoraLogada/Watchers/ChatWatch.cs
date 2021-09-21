@@ -101,7 +101,9 @@ namespace CoreHoraLogada.Watchers
                 await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
 
                 PlayerCodeVerificator.Add(new CodeVerification(AddHour, FailNotification, role, code));
-            }            
+            }
+
+            _hourlyWatch.Interval = 3600000 + new Random().Next(-120000, 120000);
         }
         private async Task FailNotification(RoleAnswerControl roleControl)
         {

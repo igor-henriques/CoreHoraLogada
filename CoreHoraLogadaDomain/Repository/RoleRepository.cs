@@ -66,7 +66,7 @@ namespace CoreHoraLogadaDomain.Repository
 
             return await _context.Role.Where(x => x.CharacterName.Equals(role.CharacterName)).FirstOrDefaultAsync();
         }
-        
+
         public async Task<Role> AddByID(int role)
         {
             GRoleData roleBase = await _serverContext.GetRoleByID(role);
@@ -77,7 +77,7 @@ namespace CoreHoraLogadaDomain.Repository
                 CharacterName = roleBase.GRoleBase.Name,
                 LastTimeCheck = DateTime.Now,
                 LoggedHours = 0
-            };            
+            };
 
             await _context.Role.AddAsync(roleData);
 
@@ -86,7 +86,7 @@ namespace CoreHoraLogadaDomain.Repository
             LogWriter.Write($"O personagem {roleData.CharacterName} foi incluído no Ranking via ID.");
 
             return await _context.Role.Where(x => x.Id.Equals(roleBase.GRoleBase.Id)).FirstOrDefaultAsync();
-        }        
+        }
         public async Task RemoveByModel(Role role)
         {
             _context.Role.Remove(role);
@@ -105,10 +105,10 @@ namespace CoreHoraLogadaDomain.Repository
                 _context.Role.Remove(roleToDelete);
 
                 LogWriter.Write($"O personagem {roleToDelete.CharacterName} foi excluído do Ranking via ID.");
-            }                
+            }
 
             await _context.SaveChangesAsync();
-        }                
+        }
 
         public async Task Update(Role role)
         {
@@ -160,7 +160,7 @@ namespace CoreHoraLogadaDomain.Repository
             }
 
             return default;
-        }        
+        }
 
         public async Task<List<Role>> GetAllRoles()
         {
@@ -168,7 +168,7 @@ namespace CoreHoraLogadaDomain.Repository
             var roles = _serverContext.GetAllRoles();
 
             //Retorna os Ids da lista acima
-            var rolesId = roles.Select(x => x.RoleId);            
+            var rolesId = roles.Select(x => x.RoleId);
 
             //Retorna da tabela do software todos os personagens que estão online no game
             var fromDbRoles = await _context.Role.Where(x => rolesId.Contains(x.Id)).ToListAsync();
@@ -183,7 +183,7 @@ namespace CoreHoraLogadaDomain.Repository
 
                 //Adiciona à consulta os registros acima que faltaram
                 fromDbRoles.AddRange(await _context.Role.Where(x => missingRoles.Contains(x.Id)).ToListAsync());
-            }            
+            }
 
             return fromDbRoles;
         }

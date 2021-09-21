@@ -1,4 +1,5 @@
-﻿using CoreHoraLogadaInfra.Data;
+﻿using CoreHoraLogadaInfra.Configurations;
+using CoreHoraLogadaInfra.Data;
 using CoreHoraLogadaInfra.Models;
 using System;
 using System.Threading.Tasks;
@@ -13,9 +14,11 @@ namespace CoreHoraLogadaDomain.Repository
     public class SaqueRepository : ISaqueRepository
     {
         private readonly ApplicationDbContext _context;
-        public SaqueRepository(ApplicationDbContext context)
+        private readonly Definitions _definitions;
+        public SaqueRepository(ApplicationDbContext context, Definitions definitions)
         {
-            _context = context;
+            this._context = context;
+            this._definitions = definitions;
         }
         public async Task Add(Saque saque)
         {
@@ -31,7 +34,7 @@ namespace CoreHoraLogadaDomain.Repository
 
             string randomGuid = string.Empty;
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < _definitions.CodeLength; i++)
             {
                 int index = new Random().Next(0, alphabet.Length);
                 randomGuid += alphabet[index];
