@@ -50,7 +50,8 @@ namespace CoreHoraLogada
                 .ConfigureServices(services =>
                 {
                     services.AddTransient<ApplicationDbContext>();
-                    services.AddSingleton<Program>();
+                    services.AddTransient<Program>();
+
                     services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
                     ServiceLifetime.Transient,
@@ -65,7 +66,7 @@ namespace CoreHoraLogada
                     services.AddSingleton<Definitions>();
                     services.AddTransient<MessageFactory>();
 
-                    services.AddSingleton<ChatWatch>();
+                    services.AddTransient<ChatWatch>();
 
                     services.AddLogging(
                     builder =>
@@ -74,8 +75,7 @@ namespace CoreHoraLogada
                                .AddFilter("System", LogLevel.Warning)
                                .AddFilter("NToastNotify", LogLevel.Warning)
                                .AddConsole();
-                    }
-                    );
+                    });
                 });
         }
         private async Task Run()

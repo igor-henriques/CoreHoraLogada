@@ -30,7 +30,7 @@ namespace CoreHoraLogadaDomain.Repository
         Task ReduceHour(int roleId, int hours);
     }
 
-    public class RoleRepository : IRoleRepository, IDisposable
+    public class RoleRepository : IRoleRepository
     {
         private readonly Dictionary<string, string> translateClassName = new Dictionary<string, string>();
         private readonly ApplicationDbContext _context;
@@ -218,8 +218,7 @@ namespace CoreHoraLogadaDomain.Repository
         public async Task<Role> GetRoleFromId(int roleId) => await _context.Role.FindAsync(roleId);
         public async Task<Role> GetRoleFromName(string characterName) => await _context.Role.Where(x => x.CharacterName.Equals(characterName)).FirstOrDefaultAsync();
         public async Task<List<Role>> GetHoursRanking() => await _context.Role.OrderBy(x => x.LoggedHours).Take(_definitions.PlayersOnRanking).ToListAsync();
-        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
-        public async void Dispose() => await _context.SaveChangesAsync();
+        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();        
 
         public async Task UpdateTimeCheck(int roleId)
         {

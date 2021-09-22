@@ -19,6 +19,8 @@ namespace CoreHoraLogada.Watchers
 {
     public class ChatWatch
     {
+        private readonly IServiceProvider _services;
+
         private readonly IServerRepository _serverContext;
 
         private readonly IRoleRepository _roleContext;
@@ -33,7 +35,7 @@ namespace CoreHoraLogada.Watchers
 
         private readonly System.Timers.Timer _chatWatch = new Timer(500);
 
-        private readonly System.Timers.Timer _hourlyWatch = new Timer(3600000);
+        private readonly System.Timers.Timer _hourlyWatch = new Timer(300000);
 
         private List<CodeVerification> PlayerCodeVerificator;
 
@@ -41,25 +43,23 @@ namespace CoreHoraLogada.Watchers
 
         private DateTime lastTopRank;
 
-        public ChatWatch(IServerRepository serverContext, IRoleRepository roleContext, ISaqueRepository saqueContext, Definitions definitions, MessageFactory mFactory)
+        public ChatWatch(IServiceProvider services)
         {
             try
             {
-                lastTopRank = new DateTime(1990, 1, 1);
+                this._services = services;
 
-                this._mFactory = mFactory;
+                this.lastTopRank = new DateTime(1990, 1, 1);
 
-                this._roleContext = roleContext;
+                this._mFactory = _services.GetService(typeof(MessageFactory)) as MessageFactory;
 
-                this._serverContext = serverContext;
+                this._roleContext = _services.GetService(typeof(IRoleRepository)) as IRoleRepository;
 
-                this._saqueContext = saqueContext;
+                this._serverContext = _services.GetService(typeof(IServerRepository)) as IServerRepository;
 
-                this._definitions = definitions;
+                this._saqueContext = _services.GetService(typeof(ISaqueRepository)) as ISaqueRepository;
 
-                this._serverContext = serverContext;
-
-                this._roleContext = roleContext;
+                this._definitions = _services.GetService(typeof(Definitions)) as Definitions;
 
                 this.path = $"{Path.Combine(_serverContext.GetLogsPath(), "world2.chat")}";
 
