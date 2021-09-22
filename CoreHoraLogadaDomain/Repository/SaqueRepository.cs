@@ -25,7 +25,7 @@ namespace CoreHoraLogadaDomain.Repository
             await _context.Saque.AddAsync(saque);
             _context.SaveChanges();
 
-            LogWriter.Write($"{saque.Role.CharacterName}({saque.Role.Id}) sacou {saque.ItemCount * saque.OrderCount}x {saque.ItemName}({saque.ItemId}) às {saque.Date}, gastando {saque.HourCost} horas do seu banco.");
+            LogWriter.Write($"{saque.RoleName}({saque.RoleId}) sacou {saque.ItemCount * saque.OrderCount}x {saque.ItemName}({saque.ItemId}) às {saque.Date}, gastando {saque.HourCost} horas do seu banco.");
         }
 
         public string GenerateCode()

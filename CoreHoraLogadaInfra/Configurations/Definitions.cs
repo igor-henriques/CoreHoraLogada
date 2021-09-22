@@ -14,6 +14,8 @@ namespace CoreHoraLogadaInfra.Configurations
         public int PlayersOnRanking { get; set; }
         public List<Item> ItemsReward { get; set; }
         public int CodeLength { get; set; }
+        public int TimeToAnswer { get; set; }
+        public bool IsRankingAllowed { get; set; }
 
         public Definitions(ItemAwardFactory itemFactory)
         {
@@ -23,6 +25,8 @@ namespace CoreHoraLogadaInfra.Configurations
             this.MessageColor = jsonNodes["COR DA MENSAGEM"].ToObject<string>();
             this.PlayersOnRanking = jsonNodes["QUANTIDADE DE JOGADORES NO TOPRANK"].ToObject<int>();
             this.CodeLength = jsonNodes["QUANTIDADE DE CARACTERES NO CÓDIGO"].ToObject<int>();
+            this.TimeToAnswer = jsonNodes["TEMPO PARA RESPONDER"].ToObject<int>();
+            this.IsRankingAllowed = jsonNodes["PERMITIDO RANKING"].ToObject<bool>();
             this.ItemsReward = itemFactory.Get();
         }
     }

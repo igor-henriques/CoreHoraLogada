@@ -195,10 +195,13 @@ namespace CoreHoraLogadaDomain.Repository
 
             role.LoggedHours++;
             role.TotalHours++;
+            role.LastTimeCheck = DateTime.Now;
 
             _context.SaveChanges();
 
             await _serverContext.SendPrivateMessage(roleId, $"Hora confirmada com sucesso. Seu banco de horas: {role.LoggedHours}");
+
+            LogWriter.Write($"{role.CharacterName}({role.Id}) bateu ponto. Banco: {role.LoggedHours}");
         }
 
         public async Task ReduceHour(int roleId, int hours)

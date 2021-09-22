@@ -8,9 +8,8 @@ namespace CoreHoraLogadaInfra.Models
     {
         [Key]
         public int Id { get; set; }
-        [ForeignKey("Role")]
         public int RoleId { get; set; }
-        public Role Role { get; set; }
+        public string RoleName { get; set; }
         public int ItemId { get; set; }
         public int ItemCount { get; set; }
         public int OrderCount { get; set; }

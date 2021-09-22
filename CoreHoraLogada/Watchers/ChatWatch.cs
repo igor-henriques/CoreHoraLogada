@@ -97,31 +97,29 @@ namespace CoreHoraLogada.Watchers
             {
                 string code = _saqueContext.GenerateCode();
 
-                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
-                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
-                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
-                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
-                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até 60 SEGUNDOS para bater seu ponto.");
+                await _serverContext.SendPrivateMessage(role.Id, $"1 hora se passou! Digite o código {code} em até {_definitions.TimeToAnswer} SEGUNDOS para bater seu ponto.");
 
-                PlayerCodeVerificator.Add(new CodeVerification(AddHour, FailNotification, role, code));
+                PlayerCodeVerificator.Add(new CodeVerification(AddHour, FailNotification, role, code, _definitions));
             }
 
             _hourlyWatch.Interval = 3600000 + new Random().Next(-120000, 120000);
         }
         private async Task FailNotification(RoleAnswerControl roleControl)
         {
-            await _serverContext.SendPrivateMessage(roleControl.Role.Id, "Você não digitou o código dentro do prazo limite. Tente novamente em 1 hora.");            
+            await _serverContext.SendPrivateMessage(roleControl.Role.Id, "Você não digitou o código dentro do prazo limite. Tente novamente em 1 hora.");
+            LogWriter.Write($"{roleControl.Role.Id} falhou em bater ponto");
         }
         private async Task AddHour(RoleAnswerControl roleControl)
         {
-            await _roleContext.AddHour(roleControl.Role.Id);
-            await _roleContext.UpdateTimeCheck(roleControl.Role.Id);
+            await _roleContext.AddHour(roleControl.Role.Id);            
         }
 
         private void ChatTick(object sender, ElapsedEventArgs e)
         {
             try
             {
+                PlayerCodeVerificator = PlayerCodeVerificator.Where(x => x.roleControl != null).ToList();
+
                 long fileSize = GetFileSize(path);
 
                 if (fileSize > lastSize)
@@ -146,14 +144,17 @@ namespace CoreHoraLogada.Watchers
                 string curMessage when curMessage.Contains("!tophora") => GetHoursRanking(message.RoleID),
                 string curMessage when curMessage.Contains("!itensdisponiveis") => SendItemsAvailable(message.RoleID),
                 string curMessage when curMessage.Contains("!horas") => SendRoleHours(message.RoleID),
-                string curMessage when curMessage.Length > 0 => PlayerCodeVerificator.Where(x => x.roleControl.Role.Id.Equals(message.RoleID)).FirstOrDefault()?.RoleAnswerTrigger(message.Text),
+                string curMessage when curMessage.Length > 0 => TriggerCodeVerification(message),
                 _ => Task.Run(() => { })
             };
 
             await forwardCommand;
         }
                 
-
+        private async Task TriggerCodeVerification(Message message)
+        {
+            PlayerCodeVerificator.Where(x => (bool)(x.roleControl?.Role.Id.Equals(message.RoleID))).FirstOrDefault()?.RoleAnswerTrigger(message.Text);
+        }
         private async Task HelpMessage(Message message)
         {
             await _serverContext.SendPrivateMessage(message.RoleID, "• Digite    !sacarhora [item] [quantidade]   para sacar recompensas utilizando seu banco de horas.");
@@ -188,8 +189,6 @@ namespace CoreHoraLogada.Watchers
                 Role currentUser = await _roleContext.GetRoleFromId(message.RoleID);
                 if (currentUser is null)
                 {
-                    await _roleContext.AddByID(message.RoleID);
-
                     return;
                 }
 
@@ -232,7 +231,7 @@ namespace CoreHoraLogada.Watchers
 
                 await _roleContext.ReduceHour(currentUser.Id, itemChoosed.HoursCost * amount);
 
-                await _serverContext.SendPrivateMessage(message.RoleID, $"Sua recompensa foi entregue. Em sua Caixa de Correios deve haver {amount}x {itemChoosed.Name}({itemChoosed.HoursCost * amount} pontos). Te restam {currentUser.LoggedHours} pontos.");
+                await _serverContext.SendPrivateMessage(message.RoleID, $"Sua recompensa foi entregue. Em sua Caixa de Correios deve haver {amount * itemChoosed.Amount}x {itemChoosed.Name}({itemChoosed.HoursCost * amount} pontos). Te restam {currentUser.LoggedHours} pontos.");
 
                 await _roleContext.SaveChangesAsync();
 
@@ -243,7 +242,7 @@ namespace CoreHoraLogada.Watchers
                     OrderCount = amount,
                     ItemName = itemChoosed.Name,
                     HourCost = itemChoosed.HoursCost * amount,
-                    Role = currentUser,
+                    RoleName = currentUser.CharacterName,
                     RoleId = currentUser.Id,
                     Date = DateTime.Now
                 });
@@ -275,18 +274,23 @@ namespace CoreHoraLogada.Watchers
 
         private async Task GetHoursRanking(int roleId)
         {
-            double cooldown = DateTime.Now.Subtract(lastTopRank).TotalSeconds;
-
-            if (lastTopRank.Year.Equals(1990) || cooldown > 30)
+            if (_definitions.IsRankingAllowed)
             {
-                var ranking = await _roleContext.GetHoursRanking();
+                double cooldown = DateTime.Now.Subtract(lastTopRank).TotalSeconds;
 
-                ranking.ForEach(player => _serverContext.SendMessage(_definitions.Channel, $"{ranking.IndexOf(player) + 1}º lugar: {player.CharacterName}. Horas: {player.TotalHours}"));
-            }
-            else
-            {
-                await _serverContext.SendPrivateMessage(roleId, $"O pedido está em tempo de espera. Tente novamente em {((cooldown - 30) * -1).ToString("0")} segundos.");
-            }
+                if (lastTopRank.Year.Equals(1990) || cooldown > 30)
+                {
+                    var ranking = await _roleContext.GetHoursRanking();
+
+                    ranking.ForEach(player => _serverContext.SendMessage(_definitions.Channel, $"{ranking.IndexOf(player) + 1}º lugar: {player.CharacterName}. Horas: {player.TotalHours}"));
+
+                    lastTopRank = DateTime.Now;
+                }
+                else
+                {
+                    await _serverContext.SendPrivateMessage(roleId, $"O pedido está em tempo de espera. Tente novamente em {((cooldown - 30) * -1).ToString("0")} segundos.");
+                }
+            }            
         }
 
         private List<Message> ReadTail(string filename, long offset)

@@ -1,4 +1,5 @@
-﻿using CoreHoraLogadaInfra.Models;
+﻿using CoreHoraLogadaInfra.Configurations;
+using CoreHoraLogadaInfra.Models;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
@@ -14,14 +15,17 @@ namespace CoreHoraLogadaDomain
         public delegate Task AddHour(RoleAnswerControl roleControl);
         public delegate Task FailNotification(RoleAnswerControl roleControl);
 
-        public CodeVerification(AddHour AddHour, FailNotification FailNotification, Role role, string code)
+        private readonly Definitions _definitions;
+
+        public CodeVerification(AddHour AddHour, FailNotification FailNotification, Role role, string code, Definitions definitions)
         {
+            this._definitions = definitions;
+
             roleControl.Role = role;
             roleControl.Code = code;
             roleControl.RoleTimer = new System.Timers.Timer(1000);
             roleControl.RoleTimer.Elapsed += (sender, e) => AnswerWatch(sender, e, AddHour, FailNotification);
-            roleControl.RoleTimer.Start();
-            roleControl.LastAnswer = default;
+            roleControl.RoleTimer.Start();            
         }        
 
         public async Task RoleAnswerTrigger(string roleAnswer)
@@ -32,15 +36,16 @@ namespace CoreHoraLogadaDomain
 
         private async void AnswerWatch(object sender, ElapsedEventArgs e, AddHour AddHour, FailNotification FailNotification)
         {
-            if (++elapsedSeconds > 60)
+            if (++elapsedSeconds > _definitions.TimeToAnswer)
             {
                 await FailNotification(this.roleControl);
                 this.Dispose(true);
             }                
 
-            if (roleControl.LastAnswer != null && roleControl.LastAnswer.Equals(roleControl.Code))
+            if (roleControl != null && roleControl.LastAnswer != null && roleControl.LastAnswer.Equals(roleControl.Code))
             {
                 await AddHour(this.roleControl);
+                this.roleControl.RoleTimer.Stop();
                 this.Dispose(true);
             }
         }
