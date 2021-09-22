@@ -48,8 +48,7 @@ namespace CoreHoraLogada
 
             return Host.CreateDefaultBuilder()
                 .ConfigureServices(services =>
-                {
-                    services.AddTransient<ApplicationDbContext>();
+                {                    
                     services.AddTransient<Program>();
 
                     services.AddDbContext<ApplicationDbContext>(options =>

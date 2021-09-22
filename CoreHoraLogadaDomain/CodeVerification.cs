@@ -20,12 +20,14 @@ namespace CoreHoraLogadaDomain
             roleControl.Code = code;
             roleControl.RoleTimer = new System.Timers.Timer(1000);
             roleControl.RoleTimer.Elapsed += (sender, e) => AnswerWatch(sender, e, AddHour, FailNotification);
-            roleControl.RoleTimer.Start();            
+            roleControl.RoleTimer.Start();
+            roleControl.LastAnswer = default;
         }        
 
         public async Task RoleAnswerTrigger(string roleAnswer)
         {
-            this.roleControl.LastAnswer = roleAnswer;
+            if (roleAnswer != null)
+                this.roleControl.LastAnswer = roleAnswer;
         }
 
         private async void AnswerWatch(object sender, ElapsedEventArgs e, AddHour AddHour, FailNotification FailNotification)
@@ -36,7 +38,7 @@ namespace CoreHoraLogadaDomain
                 this.Dispose(true);
             }                
 
-            if (roleControl.LastAnswer.Equals(roleControl.Code))
+            if (roleControl.LastAnswer != null && roleControl.LastAnswer.Equals(roleControl.Code))
             {
                 await AddHour(this.roleControl);
                 this.Dispose(true);

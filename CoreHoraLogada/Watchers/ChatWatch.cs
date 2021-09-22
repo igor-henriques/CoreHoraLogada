@@ -35,7 +35,7 @@ namespace CoreHoraLogada.Watchers
 
         private readonly System.Timers.Timer _chatWatch = new Timer(500);
 
-        private readonly System.Timers.Timer _hourlyWatch = new Timer(300000);
+        private readonly System.Timers.Timer _hourlyWatch = new Timer(15000);
 
         private List<CodeVerification> PlayerCodeVerificator;
 
@@ -87,6 +87,9 @@ namespace CoreHoraLogada.Watchers
         private async void HourlyTick(object sender, ElapsedEventArgs e)
         {
             PlayerCodeVerificator = new List<CodeVerification>();
+
+            var _serverContext = _services.GetService(typeof(IServerRepository)) as IServerRepository;            
+            var _roleContext = _services.GetService(typeof(IRoleRepository)) as IRoleRepository;
 
             var roles = await _roleContext.GetAllRoles();
 

@@ -23,7 +23,7 @@ namespace CoreHoraLogadaDomain.Repository
         public async Task Add(Saque saque)
         {
             await _context.Saque.AddAsync(saque);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             LogWriter.Write($"{saque.Role.CharacterName}({saque.Role.Id}) sacou {saque.ItemCount * saque.OrderCount}x {saque.ItemName}({saque.ItemId}) às {saque.Date}, gastando {saque.HourCost} horas do seu banco.");
         }

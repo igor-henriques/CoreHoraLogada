@@ -60,9 +60,9 @@ namespace CoreHoraLogadaDomain.Repository
 
         public async Task<Role> AddByRankingModel(Role role)
         {
-            await _context.Role.AddAsync(role);
+            _context.Role.Add(role);
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             return await _context.Role.Where(x => x.CharacterName.Equals(role.CharacterName)).FirstOrDefaultAsync();
         }
@@ -76,16 +76,17 @@ namespace CoreHoraLogadaDomain.Repository
                 Id = roleBase.GRoleBase.Id,
                 CharacterName = roleBase.GRoleBase.Name,
                 LastTimeCheck = DateTime.Now,
-                LoggedHours = 0
+                LoggedHours = 0,
+                TotalHours = 0
             };
 
-            await _context.Role.AddAsync(roleData);
+            _context.Role.Add(roleData);
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             LogWriter.Write($"O personagem {roleData.CharacterName} foi incluído no Ranking via ID.");
 
-            return await _context.Role.Where(x => x.Id.Equals(roleBase.GRoleBase.Id)).FirstOrDefaultAsync();
+            return roleData;
         }
         public async Task RemoveByModel(Role role)
         {
@@ -93,7 +94,7 @@ namespace CoreHoraLogadaDomain.Repository
 
             LogWriter.Write($"O personagem {role.CharacterName} foi excluído do Ranking via DbModel.");
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
 
         public async Task RemoveByID(int roleId)
@@ -107,7 +108,7 @@ namespace CoreHoraLogadaDomain.Repository
                 LogWriter.Write($"O personagem {roleToDelete.CharacterName} foi excluído do Ranking via ID.");
             }
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
 
         public async Task Update(Role role)
@@ -121,7 +122,7 @@ namespace CoreHoraLogadaDomain.Repository
                 LogWriter.Write($"O personagem {curRole.CharacterName} foi atualizado no Ranking via DbModel.");
             }
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
 
         /// <summary>
@@ -168,7 +169,7 @@ namespace CoreHoraLogadaDomain.Repository
             var roles = _serverContext.GetAllRoles();
 
             //Retorna os Ids da lista acima
-            var rolesId = roles.Select(x => x.RoleId);
+            var rolesId = roles.Select(x => x.RoleId).ToList();
 
             //Retorna da tabela do software todos os personagens que estão online no game
             var fromDbRoles = await _context.Role.Where(x => rolesId.Contains(x.Id)).ToListAsync();
@@ -176,16 +177,16 @@ namespace CoreHoraLogadaDomain.Repository
             //Retira a diferença entre o retorno da tabela do software e da base do game
             var missingRoles = rolesId.Except(fromDbRoles.Select(x => x.Id).ToList()).ToList();
 
+            //Clona os registros da tabela para retirar o lastreamento da database
+            var finalRoleList = fromDbRoles.Select(x => (Role)x.Clone()).ToList();
+
             if (missingRoles.Count > 0)
             {
                 //Adiciona à tabela do software a diferença acima
-                missingRoles.ForEach(async x => await AddByID(x));
-
-                //Adiciona à consulta os registros acima que faltaram
-                fromDbRoles.AddRange(await _context.Role.Where(x => missingRoles.Contains(x.Id)).ToListAsync());
+                missingRoles.ForEach(async x => finalRoleList.Add(await AddByID(x)));
             }
 
-            return fromDbRoles;
+            return finalRoleList;
         }
 
         public async Task AddHour(int roleId)
@@ -195,7 +196,7 @@ namespace CoreHoraLogadaDomain.Repository
             role.LoggedHours++;
             role.TotalHours++;
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             await _serverContext.SendPrivateMessage(roleId, $"Hora confirmada com sucesso. Seu banco de horas: {role.LoggedHours}");
         }
@@ -206,7 +207,7 @@ namespace CoreHoraLogadaDomain.Repository
 
             role.LoggedHours -= hours;
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
         public async Task SendHours(int roleId)
         {
@@ -218,7 +219,7 @@ namespace CoreHoraLogadaDomain.Repository
         public async Task<Role> GetRoleFromId(int roleId) => await _context.Role.FindAsync(roleId);
         public async Task<Role> GetRoleFromName(string characterName) => await _context.Role.Where(x => x.CharacterName.Equals(characterName)).FirstOrDefaultAsync();
         public async Task<List<Role>> GetHoursRanking() => await _context.Role.OrderBy(x => x.LoggedHours).Take(_definitions.PlayersOnRanking).ToListAsync();
-        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();        
+        public async Task SaveChangesAsync() => _context.SaveChanges();        
 
         public async Task UpdateTimeCheck(int roleId)
         {
@@ -226,7 +227,7 @@ namespace CoreHoraLogadaDomain.Repository
 
             currentRole.LastTimeCheck = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
     }
 }
