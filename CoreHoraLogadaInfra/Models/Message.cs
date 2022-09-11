@@ -1,5 +1,4 @@
-﻿using PWToolKit.API.Gamedbd;
-using PWToolKit.Enums;
+﻿using PWToolKit.Enums;
 
 namespace CoreRankingInfra.Model
 {

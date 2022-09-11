@@ -1,120 +1,91 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Timers;
-using System.Net;
+﻿using CoreHoraLogadaInfra.Data;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics;
 using System.Net.Http;
-using CoreHoraLogadaInfra.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CoreHoraLogadaInfra.License
 {
-    public class LicenseControl
+    public class LicenseControl : BackgroundService
     {
-        private static string user;
-        private static string licenseKey;
-        private static string hwid = default;
-        private static Product product;
+        private readonly CoreLicense _license;
+        private readonly ILogger<LicenseControl> _logger;
+        private readonly HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
+        private readonly HttpClient httpClient;
 
-        public State _response = State.Erro;
-
-        Timer LicenseWatch;
-        public async Task Start(string _user, string _licenseKey, Product _product)
+        public LicenseControl(ILogger<LicenseControl> logger, CoreLicense license)
         {
-            user = _user;
-            licenseKey = _licenseKey;
-            hwid = await UserHWID();
-            product = _product;
+            this._logger = logger;
+            this._license = license;
 
-            if (!string.IsNullOrEmpty(hwid))
+            this.httpClient = HttpClientFactory.Create();
+        }
+
+        protected override async Task ExecuteAsync(System.Threading.CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("MÓDULO DE LICENÇA INICIADO");
+
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+            this._license.Hwid = await UserHWID(cts.Token);
+
+            if (string.IsNullOrEmpty(this._license.Hwid))
             {
-                await DoAllTests();
-
-                LicenseWatch = new Timer(1800000);
-                LicenseWatch.Elapsed += LicenseTick;
-                LicenseWatch.Start();
-            }
-            else
-            {                
                 LogWriter.Write("Não foi possível obter o registro de HWID.");
-                Environment.Exit(0);
+                Process.GetCurrentProcess().Kill();
+            }
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await Check(cts.Token);
+                await Task.Delay(TimeSpan.FromMinutes(30));
+
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
             }
         }
-
-        private async void LicenseTick(object sender, ElapsedEventArgs e)
-        {
-            await DoAllTests();
-        }
-
-        private async Task DoAllTests()
+        private async Task Check(CancellationToken cancellationToken)
         {
             try
             {
-                //Checa se existe registro do equipamento
-                var httpClient = HttpClientFactory.Create();
+                var response = (State)int.Parse(await httpClient.GetStringAsync($"http://license.ironside.dev/api/license/{_license.User}/{_license.Licensekey}/{_license.Hwid}/{Enum.GetName(typeof(Product), (int)_license.Product)}", cancellationToken));
 
-                var response = (State)int.Parse(await httpClient.GetStringAsync($"http://license.ironside.dev/api/license/{user}/{licenseKey}/{hwid}/{Enum.GetName(typeof(Product), (int)product)}"));
-                _response = response;
-
-                if (!(response is State.Erro))
+                var logMessage = response switch
                 {
-                    if (response is State.Inexiste)
-                    {                        
-                        LogWriter.Write("Não existe registro da sua instância. Entre em contato com a administração. Discord: Ironside#3862");
-                        Environment.Exit(0);
-                    }
-                    else if (response is State.Welcome)
-                    {
-                        LogWriter.Write($"Bem vindo, {user}!");
-                    }
-                    else
-                    {
-                        //Checa se a licença está na validade
-                        if (response is State.Expirado)
-                        {                            
-                            LogWriter.Write("Sua licença está fora da validade. Entre em contato com a administração. Discord: Ironside#3862");
-                            Environment.Exit(0);
-                        }
-                        else
-                        {
-                            //Checa se a licença está ativa
-                            if (response is State.Inativo)
-                            {                         
-                                LogWriter.Write("Sua licença não está ativa. Entre em contato com a administração. Discord: Ironside#3862");
-                                Environment.Exit(0);
-                            }
-                            else
-                            {
-                                //Checa se a licença atual já está sendo utilizada por outro HWID
-                                if (response is State.Esgotado)
-                                {                             
-                                    LogWriter.Write("Essa licença já está registrada em outra instância. Entre em contato com a administração. Discord: Ironside#3862");
-                                    Environment.Exit(0);
-                                }
-                                else
-                                {
-                                    LogWriter.Write("Produto inválido. Entre em contato com a administração. Discord: Ironside#3862");
-                                    Environment.Exit(0);
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {                    
-                    LogWriter.Write("Houve um erro na requisição da licença. Discord: Ironside#3862");
-                    Environment.Exit(0);
-                }
+                    State.Erro => "Houve um erro na requisição da licença.",
+                    State.Esgotado => "Sua licença já está registrada em outra instância.",
+                    State.Inexiste => "Sua licença não existe.",
+                    State.Expirado => "Sua licença está fora da validade.",
+                    State.Inativo => "Sua licença não está ativa.",
+                    State.InvalidProduct => "Sua não pode ser utilizada neste produto.",
+                    State.Welcome => "Licença validada com sucesso.",
+                    State.Valido => "Licença validada com sucesso.",
+                    _ => "Houve um erro na requisição da licença."
+                };
+
+                logMessage += response != (State.Valido | State.Welcome) ? " Entre em contato com a administração. Discord: Ironside#3862" : default;
+
+                _logger.LogInformation(logMessage);
+
+                if (response != (State.Valido | State.Welcome))
+                    Process.GetCurrentProcess().Kill();
             }
             catch (Exception e)
             {
                 LogWriter.Write(e.ToString());
-                Environment.Exit(0);
+                Process.GetCurrentProcess().Kill();
             }
         }
-        private static async Task<string> UserHWID()
-        {
-            var ip = new WebClient().DownloadString(new Uri("https://ipv4.icanhazip.com/"));
 
-            return ip.Replace("\n", default).Replace(".", default);
+        private async Task<string> UserHWID(CancellationToken cancellationToken)
+        {
+            string ipAddress = await client.GetStringAsync("https://ipv4.icanhazip.com/", cancellationToken);
+
+            return ipAddress?.Replace("\n", default)?.Replace(".", default);
         }
     }
 }

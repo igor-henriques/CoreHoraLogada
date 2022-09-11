@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.IO;
 
 namespace CoreHoraLogadaInfra.Data
@@ -14,7 +14,7 @@ namespace CoreHoraLogadaInfra.Data
                     Log(logMessage, w);
                 }
             }
-            catch (Exception){}
+            catch (Exception) { }
         }
 
         private static void Log(string logMessage, TextWriter txtWriter)
@@ -30,7 +30,7 @@ namespace CoreHoraLogadaInfra.Data
 
                 Console.WriteLine(logMessage);
             }
-            catch (Exception){}
+            catch (Exception) { }
         }
     }
 }

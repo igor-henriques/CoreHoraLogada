@@ -9,13 +9,13 @@ namespace CoreHoraLogadaInfra.Configurations
 {
     public record Definitions
     {
-        public BroadcastChannel Channel { get; set; }
-        public string MessageColor { get; set; }        
-        public int PlayersOnRanking { get; set; }
-        public List<Item> ItemsReward { get; set; }
-        public int CodeLength { get; set; }
-        public int TimeToAnswer { get; set; }
-        public bool IsRankingAllowed { get; set; }
+        public BroadcastChannel Channel { get; }
+        public string MessageColor { get; }
+        public int PlayersOnRanking { get; }
+        public List<Item> ItemsReward { get; }
+        public int CodeLength { get; }
+        public int TimeToAnswer { get; }
+        public bool IsRankingAllowed { get; }
 
         public Definitions(ItemAwardFactory itemFactory)
         {

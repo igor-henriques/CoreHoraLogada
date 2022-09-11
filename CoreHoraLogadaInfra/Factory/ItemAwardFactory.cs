@@ -9,6 +9,7 @@ namespace CoreHoraLogadaInfra.Configurations
     public class ItemAwardFactory
     {
         private List<Item> ItemsAward = new List<Item>();
+
         public ItemAwardFactory()
         {
             JObject jsonNodes = (JObject)JsonConvert.DeserializeObject(File.ReadAllText("./Configurations/ItensAward.json"));

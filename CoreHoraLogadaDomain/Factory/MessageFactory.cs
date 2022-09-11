@@ -1,5 +1,4 @@
-﻿using CoreHoraLogadaDomain.Repository;
-using CoreHoraLogadaInfra.Models;
+﻿using CoreHoraLogada.Infrastructure.Interfaces;
 using CoreRankingInfra.Model;
 using PWToolKit.Enums;
 using System;
@@ -36,14 +35,15 @@ namespace CoreHoraLogadaDomain.Factory
 
                         return newMessage;
                     }
-                }                
+                }
             }
 
             return default;
         }
+
         public List<Message> GetMessages(List<string> log)
         {
-            return log.Select(log => GetMessage(log)).Where(x => x != default).ToList();
+            return log.Select(GetMessage).Where(x => x != default).ToList();
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace CoreHoraLogadaInfra.Data
-{    
+{
     public static class ConnectionBuilder
     {
         public static string GetConnectionString()

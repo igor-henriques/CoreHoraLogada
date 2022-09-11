@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreHoraLogada", "CoreHoraLogada\CoreHoraLogada.csproj", "{7844BF6C-FDA8-41B6-B1DC-1585E9E6AFE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreHoraLogada.App", "CoreHoraLogada\CoreHoraLogada.App.csproj", "{7844BF6C-FDA8-41B6-B1DC-1585E9E6AFE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreHoraLogadaInfra", "CoreHoraLogadaInfra\CoreHoraLogadaInfra.csproj", "{07094C49-74D3-4123-80E1-15316F33A4D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreHoraLogada.Domain", "CoreHoraLogadaInfra\CoreHoraLogada.Domain.csproj", "{07094C49-74D3-4123-80E1-15316F33A4D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreHoraLogadaDomain", "CoreHoraLogadaDomain\CoreHoraLogadaDomain.csproj", "{9AFF8801-B358-419F-ABA3-20DE6F8C74C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreHoraLogada.Infrastructure", "CoreHoraLogadaDomain\CoreHoraLogada.Infrastructure.csproj", "{9AFF8801-B358-419F-ABA3-20DE6F8C74C0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{52464248-72DF-485C-9391-C3396E422805}"
 	ProjectSection(SolutionItems) = preProject
